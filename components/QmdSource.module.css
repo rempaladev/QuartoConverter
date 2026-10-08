@@ -1,0 +1,28 @@
+.source {
+  margin: 0;
+  background: var(--color-panel);
+  border-radius: var(--radius);
+  padding: 0.75rem 0;
+  height: 100%;
+  overflow: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+}
+
+.lineNumber {
+  color: var(--color-muted);
+  text-align: right;
+  padding-right: 0.75rem;
+  user-select: none;
+}
+
+.lineText {
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-right: 0.75rem;
+}

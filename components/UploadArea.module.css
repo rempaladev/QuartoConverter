@@ -1,0 +1,40 @@
+.dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 2.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--color-panel);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.dragging {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-panel));
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
