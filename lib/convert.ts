@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { readFile } from "fs/promises";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
-const MAX_OUTPUT_TOKENS = 8192;
+const MAX_OUTPUT_TOKENS = 16384;
 
 const SYSTEM_PROMPT = `You convert a single PDF document into a Quarto .qmd file that reproduces \
 the document as faithfully as possible. Follow these rules exactly:
@@ -19,14 +19,54 @@ the document as faithfully as possible. Follow these rules exactly:
 3. Preserve the document's structure: heading levels (#, ##, ###, ...), \
    paragraphs, ordered/unordered lists, tables (as Markdown tables), block \
    quotes, and code blocks (fenced with the correct language if identifiable).
-4. Preserve ALL mathematical notation faithfully using LaTeX:
+4. MATH — trust the visual rendering of the PDF page. The PDF text layer may \
+   contain Unicode approximations (e.g. a raised ² for a superscript, or a \
+   literal α) that are incomplete or wrong; read the typeset layout to produce \
+   correct LaTeX instead.
+
+   Delimiters:
    - Inline math: $...$
-   - Display/block equations: $$...$$ on their own lines
-   - Use proper LaTeX commands for fractions (\\frac), integrals (\\int), \
-     summations (\\sum), Greek letters (\\alpha, \\beta, ...), subscripts/\
-     superscripts (_, ^), matrices (\\begin{bmatrix}...\\end{bmatrix}), etc.
-   - Never approximate math with plain Unicode symbols when LaTeX is more \
-     faithful to the original notation.
+   - Display / block equations: $$...$$ on their own lines
+   - Inside table cells: always use inline $...$ — never display $$...$$
+
+   Core constructs:
+   - Fractions: \\frac{a}{b}; use \\dfrac{a}{b} to force full-size display inline
+   - Exponents and subscripts with more than one character require braces: \
+     x^{-1}, x^{2n}, a_{ij}, x_{n+1}
+   - Roots: \\sqrt{x}, \\sqrt[3]{x}
+   - Derivatives: \\frac{dy}{dx}, f'(x), f''(x), \\frac{\\partial f}{\\partial x}
+   - Integrals: \\int_a^b f(x)\\,dx (thin space \\, before dx); \\iint_D f\\,dA; \
+     \\iiint; \\oint_C
+   - Limits: \\lim_{x \\to \\infty} f(x)
+   - Sums / products: \\sum_{n=1}^{\\infty} a_n, \\prod_{i=1}^{n} a_i
+
+   Multi-line and structured math:
+   - Aligned derivations: $$\\begin{aligned} a &= b \\\\ &= c \\end{aligned}$$
+   - Matrices (round brackets): \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}
+   - Matrices (square brackets): \\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}
+   - Systems of equations: \\begin{cases} x+y=1 \\\\ x-y=0 \\end{cases}
+
+   Unicode → LaTeX (never copy these raw into math mode):
+   - Greek lower: \\alpha \\beta \\gamma \\delta \\epsilon \\theta \\lambda \
+     \\mu \\pi \\sigma \\phi \\chi \\psi \\omega
+   - Greek upper: \\Delta \\Sigma \\Omega \\Gamma \\Phi \\Theta
+   - Relations: \\leq \\geq \\neq \\approx \\equiv \\propto \\sim
+   - Arithmetic: \\pm \\mp \\times \\div \\cdot
+   - Arrows / logic: \\to \\implies \\iff \\mapsto \\neg \\land \\lor \
+     \\therefore \\because
+   - Sets: \\in \\notin \\cup \\cap \\emptyset \\subseteq \\subset \
+     \\forall \\exists
+   - Number sets (blackboard bold): \\mathbb{N} \\mathbb{Z} \\mathbb{Q} \
+     \\mathbb{R} \\mathbb{C}
+   - Calculus: \\partial \\nabla \\infty
+   - Geometry: \\angle \\perp \\parallel
+   - Combinatorics: "n choose k" → \\binom{n}{k}; modular → \\pmod{n}
+   - Probability: P(A given B) → P(A \\mid B)
+   - Vectors: \\vec{v}, \\hat{u}, \\lvert \\vec{v} \\rvert
+
+   Known-bad macros (break Quarto's Typst renderer — use the replacement):
+   - \\dbinom{n}{k} → \\binom{n}{k}
+
 5. For figures/images you cannot reproduce, insert a short italicized \
    placeholder describing the figure (e.g., *Figure: diagram of ...*) rather \
    than omitting it silently.

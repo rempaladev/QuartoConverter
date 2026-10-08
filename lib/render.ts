@@ -18,9 +18,12 @@ export async function renderQmdToHtml(qmdPath: string): Promise<RenderResult> {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const notInstalled = message.includes("ENOENT") || message.includes("not recognized") || message.includes("not found");
     return {
       htmlPath: null,
-      warning: `Quarto render failed, showing raw markdown instead: ${message}`,
+      warning: notInstalled
+        ? "Quarto not found — showing browser-rendered preview."
+        : `Quarto render failed — showing browser-rendered preview. Details: ${message}`,
     };
   }
 
