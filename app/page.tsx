@@ -7,32 +7,21 @@ import UploadArea from "@/components/UploadArea";
 import ProgressStatus from "@/components/ProgressStatus";
 import ViewTabs, { TabOption } from "@/components/ViewTabs";
 import QmdSource from "@/components/QmdSource";
-import QmdPreview from "@/components/QmdPreview";
-import ResizablePanel from "@/components/ResizablePanel";
 import styles from "./page.module.css";
 
 // react-pdf touches browser-only APIs at module scope; it must never run during SSR.
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), { ssr: false });
 
-type ViewMode = "pdf" | "source" | "preview" | "side";
-type SideQmdMode = "source" | "preview";
+type ViewMode = "pdf" | "source" | "side";
 
 interface ConvertResult {
   qmdText: string;
-  html: string | null;
-  renderWarning?: string;
 }
 
 const MAIN_TABS: TabOption<ViewMode>[] = [
   { key: "pdf", label: "PDF" },
   { key: "source", label: "QMD Source" },
-  { key: "preview", label: "QMD Preview" },
   { key: "side", label: "Side by side" },
-];
-
-const SIDE_SUB_TABS: TabOption<SideQmdMode>[] = [
-  { key: "source", label: "Source" },
-  { key: "preview", label: "Preview" },
 ];
 
 export default function Home() {
@@ -41,7 +30,6 @@ export default function Home() {
   const [error, setError] = useState<string | undefined>(undefined);
   const [result, setResult] = useState<ConvertResult | null>(null);
   const [view, setView] = useState<ViewMode>("pdf");
-  const [sideQmdMode, setSideQmdMode] = useState<SideQmdMode>("preview");
 
   const resultReady = stage === "done" && result !== null;
 
@@ -156,14 +144,6 @@ export default function Home() {
 
           <div className={styles.toolbar}>
             <ViewTabs options={tabsWithState} active={view} onChange={setView} />
-            {resultReady && view === "side" && (
-              <ViewTabs
-                options={SIDE_SUB_TABS}
-                active={sideQmdMode}
-                onChange={setSideQmdMode}
-                size="small"
-              />
-            )}
             {resultReady && (
               <a className={styles.downloadButton} href={`/api/convert/${jobId}/download`}>
                 Download .qmd
@@ -184,31 +164,13 @@ export default function Home() {
               </div>
             )}
 
-            {view === "preview" && resultReady && (
-              <ResizablePanel>
-                <QmdPreview
-                  html={result.html}
-                  warning={result.renderWarning}
-                  fallbackText={result.qmdText}
-                />
-              </ResizablePanel>
-            )}
-
             {view === "side" && resultReady && pdfUrl && (
               <div className={styles.sideBySide}>
                 <div className={styles.panel}>
                   <PdfViewer fileUrl={pdfUrl} />
                 </div>
                 <div className={styles.panel}>
-                  {sideQmdMode === "source" ? (
-                    <QmdSource text={result.qmdText} />
-                  ) : (
-                    <QmdPreview
-                      html={result.html}
-                      warning={result.renderWarning}
-                      fallbackText={result.qmdText}
-                    />
-                  )}
+                  <QmdSource text={result.qmdText} />
                 </div>
               </div>
             )}

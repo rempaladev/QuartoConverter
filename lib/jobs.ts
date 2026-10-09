@@ -12,8 +12,6 @@ export interface Job {
   pdfPath?: string;
   qmdPath?: string;
   qmdText?: string;
-  htmlPath?: string;
-  renderWarning?: string;
   createdAt: number;
 }
 

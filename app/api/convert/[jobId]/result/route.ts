@@ -1,7 +1,5 @@
-import { readFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/jobs";
-import { buildPreviewHtml } from "@/lib/preview";
 
 export async function GET(
   _request: NextRequest,
@@ -16,13 +14,5 @@ export async function GET(
     return NextResponse.json({ error: "Job is not finished yet." }, { status: 409 });
   }
 
-  const html = job.htmlPath
-    ? await readFile(job.htmlPath, "utf-8").catch(() => null)
-    : buildPreviewHtml(job.qmdText ?? "");
-
-  return NextResponse.json({
-    qmdText: job.qmdText ?? "",
-    html,
-    renderWarning: job.renderWarning,
-  });
+  return NextResponse.json({ qmdText: job.qmdText ?? "" });
 }
