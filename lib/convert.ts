@@ -122,7 +122,7 @@ export async function convertPdfToQmd(pdfPath: string): Promise<string> {
 
 // Models occasionally wrap the whole file in a ```qmd ... ``` fence despite
 // being told not to; strip it defensively rather than shipping it to Quarto.
-function stripStrayCodeFence(text: string): string {
+export function stripStrayCodeFence(text: string): string {
   const trimmed = text.trim();
   const fenceMatch = trimmed.match(/^```[a-zA-Z]*\n([\s\S]*)\n```$/);
   return fenceMatch ? fenceMatch[1] : trimmed;
