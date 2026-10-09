@@ -13,6 +13,5 @@ export async function GET(
   return NextResponse.json({
     stage: job.stage,
     error: job.error,
-    renderWarning: job.renderWarning,
   });
 }

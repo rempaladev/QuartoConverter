@@ -5,7 +5,6 @@ const STAGES: { key: JobStage; label: string }[] = [
   { key: "uploading", label: "Uploading" },
   { key: "extracting", label: "Extracting" },
   { key: "converting", label: "Converting" },
-  { key: "rendering", label: "Rendering" },
   { key: "done", label: "Done" },
 ];
 

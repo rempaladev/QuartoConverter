@@ -3,7 +3,6 @@ import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { createJob, updateJob } from "@/lib/jobs";
 import { convertPdfToQmd } from "@/lib/convert";
-import { renderQmdToHtml } from "@/lib/render";
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -43,14 +42,7 @@ async function runPipeline(jobId: string, pdfPath: string) {
 
     const qmdPath = path.join(path.dirname(pdfPath), "output.qmd");
     await writeFile(qmdPath, qmdText, "utf-8");
-    updateJob(jobId, { stage: "rendering", qmdPath, qmdText });
-
-    const { htmlPath, warning } = await renderQmdToHtml(qmdPath);
-    updateJob(jobId, {
-      stage: "done",
-      htmlPath: htmlPath ?? undefined,
-      renderWarning: warning,
-    });
+    updateJob(jobId, { stage: "done", qmdPath, qmdText });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     updateJob(jobId, { stage: "error", error: message });
