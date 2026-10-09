@@ -72,7 +72,13 @@ the document as faithfully as possible. Follow these rules exactly:
    than omitting it silently.
 6. Do not invent content that is not present in the source PDF.`;
 
-export async function convertPdfToQmd(pdfPath: string): Promise<string> {
+export interface ConvertResult {
+  qmdText: string;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export async function convertPdfToQmd(pdfPath: string): Promise<ConvertResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error(
@@ -117,7 +123,11 @@ export async function convertPdfToQmd(pdfPath: string): Promise<string> {
   if (!textBlock || textBlock.type !== "text") {
     throw new Error("The model did not return any text content.");
   }
-  return stripStrayCodeFence(textBlock.text);
+  return {
+    qmdText: stripStrayCodeFence(textBlock.text),
+    inputTokens: message.usage.input_tokens,
+    outputTokens: message.usage.output_tokens,
+  };
 }
 
 // Models occasionally wrap the whole file in a ```qmd ... ``` fence despite
