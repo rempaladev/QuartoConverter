@@ -1,22 +1,47 @@
+import { randomUUID } from "crypto";
 import { readFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/jobs";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
+  const startedAt = Date.now();
   const { jobId } = await params;
-  const job = getJob(jobId);
-  if (!job || !job.qmdPath) {
-    return NextResponse.json({ error: "Job not found." }, { status: 404 });
-  }
+  const event: Record<string, unknown> = {
+    request_id: randomUUID(),
+    method: "GET",
+    path: "/api/convert/[jobId]/download",
+    job_id: jobId,
+  };
 
-  const content = await readFile(job.qmdPath, "utf-8");
-  return new NextResponse(content, {
-    headers: {
-      "Content-Type": "text/markdown; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="output.qmd"',
-    },
-  });
+  try {
+    const job = getJob(jobId);
+    if (!job || !job.qmdPath) {
+      event.status_code = 404;
+      event.outcome = "error";
+      event.error = { message: "Job not found." };
+      return NextResponse.json({ error: "Job not found." }, { status: 404 });
+    }
+
+    const content = await readFile(job.qmdPath, "utf-8");
+    event.bytes_served = Buffer.byteLength(content, "utf-8");
+    event.status_code = 200;
+    event.outcome = "success";
+    return new NextResponse(content, {
+      headers: {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="output.qmd"',
+      },
+    });
+  } finally {
+    event.duration_ms = Date.now() - startedAt;
+    if (event.outcome === "error") {
+      logger.error(event);
+    } else {
+      logger.info(event);
+    }
+  }
 }
